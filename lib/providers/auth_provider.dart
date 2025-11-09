@@ -33,37 +33,60 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _fetchUserRole() async {
     if (_user == null) return;
-    final response = await _supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', _user!.id)
-        .single();
-    _role = response['role'];
-    notifyListeners();
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', _user!.id)
+          .single();
+      _role = response['role'];
+      notifyListeners();
+    } catch (e) {
+      // If profile doesn't exist, role remains null (user)
+      _role = null;
+      notifyListeners();
+    }
   }
 
   Future<void> signUp(String email, String password) async {
-    final response = await _supabase.auth.signUp(
-      email: email,
-      password: password,
-    );
-    // After signup, insert profile with default role 'user'
-    if (response.user != null) {
-      await _supabase.from('profiles').insert({
-        'id': response.user!.id,
-        'role': 'user',
-      });
+    try {
+      final response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+      );
+      // After signup, insert profile with default role 'user'
+      if (response.user != null) {
+        await _supabase.from('profiles').insert({
+          'id': response.user!.id,
+          'role': 'user',
+        });
+      } else {
+        throw Exception('Signup failed: Unable to create account');
+      }
+    } catch (e) {
+      throw Exception('Failed to sign up: $e');
     }
   }
 
   Future<void> signIn(String email, String password) async {
-    await _supabase.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      final response = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      if (response.user == null) {
+        throw Exception('Login failed: Invalid credentials');
+      }
+    } catch (e) {
+      throw Exception('Failed to sign in: $e');
+    }
   }
 
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      throw Exception('Failed to sign out: $e');
+    }
   }
 }

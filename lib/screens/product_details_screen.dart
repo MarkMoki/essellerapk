@@ -16,7 +16,7 @@ class ProductDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Product Details'),
       body: Container(
         decoration: const BoxDecoration(
@@ -30,91 +30,105 @@ class ProductDetailsScreen extends StatelessWidget {
             ],
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GlassyContainer(
-                child: ProfessionalImage(
-                  imageUrl: product.imageUrl,
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              const SizedBox(height: 20),
-              GlassyContainer(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '\$${product.price}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Stock: ${product.stock}',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Description',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      product.description,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    GlassyButton(
-                      onPressed: () {
-                        cartProvider.addItem(product.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${product.name} added to cart')),
-                        );
-                      },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final isWide = screenWidth > 600;
+            final padding = isWide ? 32.0 : 16.0;
+            final imageHeight = isWide ? 400.0 : 300.0;
+            final titleFontSize = isWide ? 28.0 : 24.0;
+            final priceFontSize = isWide ? 24.0 : 20.0;
+            final descTitleFontSize = isWide ? 20.0 : 18.0;
+            final descFontSize = isWide ? 18.0 : 16.0;
+            final buttonFontSize = isWide ? 18.0 : 16.0;
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GlassyContainer(
+                    child: ProfessionalImage(
+                      imageUrl: product.imageUrl,
                       width: double.infinity,
-                      child: const Text(
-                        'Add to Cart',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                      height: imageHeight,
+                      fit: BoxFit.cover,
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+                  GlassyContainer(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.name,
+                          style: TextStyle(
+                            fontSize: titleFontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '\$${product.price}',
+                          style: TextStyle(
+                            fontSize: priceFontSize,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Stock: ${product.stock}',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: isWide ? 16 : 14,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Description',
+                          style: TextStyle(
+                            fontSize: descTitleFontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          product.description,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: descFontSize,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        GlassyButton(
+                          onPressed: () {
+                            cartProvider.addItem(product.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('${product.name} added to cart')),
+                            );
+                          },
+                          width: double.infinity,
+                          child: Text(
+                            'Add to Cart',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: buttonFontSize,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

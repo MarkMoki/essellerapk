@@ -48,7 +48,7 @@ class _CartScreenState extends State<CartScreen> {
     final total = cartItems.fold(0.0, (sum, item) => sum + (item['product'] as Product).price * (item['quantity'] as int));
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Cart'),
       body: Container(
         decoration: const BoxDecoration(
@@ -72,60 +72,73 @@ class _CartScreenState extends State<CartScreen> {
             : Column(
                 children: [
                   Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: cartItems.length,
-                      itemBuilder: (context, index) {
-                        final item = cartItems[index];
-                        final product = item['product'] as Product;
-                        final quantity = item['quantity'] as int;
-                        return GlassyContainer(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: Row(
-                            children: [
-                              ProfessionalImage(
-                                imageUrl: product.imageUrl,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      product.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final screenWidth = constraints.maxWidth;
+                        final imageSize = screenWidth > 600 ? 100.0 : 80.0;
+                        final fontSize = screenWidth > 600 ? 18.0 : 16.0;
+                        final priceFontSize = screenWidth > 600 ? 18.0 : 16.0;
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: cartItems.length,
+                          itemBuilder: (context, index) {
+                            final item = cartItems[index];
+                            final product = item['product'] as Product;
+                            final quantity = item['quantity'] as int;
+                            return GlassyContainer(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              child: Row(
+                                children: [
+                                  ProfessionalImage(
+                                    imageUrl: product.imageUrl,
+                                    width: imageSize,
+                                    height: imageSize,
+                                    fit: BoxFit.cover,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          product.name,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            fontSize: fontSize,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Quantity: $quantity',
+                                          style: const TextStyle(color: Colors.white70),
+                                        ),
+                                        Text(
+                                          '\$${product.price * quantity}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: priceFontSize,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      'Quantity: $quantity',
-                                      style: const TextStyle(color: Colors.white70),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.remove_circle,
+                                      color: Colors.redAccent,
+                                      size: screenWidth > 600 ? 32 : 28,
                                     ),
-                                    Text(
-                                      '\$${product.price * quantity}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                    onPressed: () {
+                                      cartProvider.removeItem(product.id);
+                                    },
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.remove_circle, color: Colors.redAccent),
-                                onPressed: () {
-                                  cartProvider.removeItem(product.id);
-                                },
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
                     ),

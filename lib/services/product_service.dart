@@ -5,19 +5,35 @@ class ProductService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<List<Product>> fetchProducts() async {
-    final response = await _supabase.from('products').select();
-    return response.map((json) => Product.fromJson(json)).toList();
+    try {
+      final response = await _supabase.from('products').select();
+      return response.map((json) => Product.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch products: $e');
+    }
   }
 
   Future<void> addProduct(Product product) async {
-    await _supabase.from('products').insert(product.toJson());
+    try {
+      await _supabase.from('products').insert(product.toJson());
+    } catch (e) {
+      throw Exception('Failed to add product: $e');
+    }
   }
 
   Future<void> updateProduct(Product product) async {
-    await _supabase.from('products').update(product.toJson()).eq('id', product.id);
+    try {
+      await _supabase.from('products').update(product.toJson()).eq('id', product.id);
+    } catch (e) {
+      throw Exception('Failed to update product: $e');
+    }
   }
 
   Future<void> deleteProduct(String id) async {
-    await _supabase.from('products').delete().eq('id', id);
+    try {
+      await _supabase.from('products').delete().eq('id', id);
+    } catch (e) {
+      throw Exception('Failed to delete product: $e');
+    }
   }
 }

@@ -23,10 +23,11 @@ class ProfessionalImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Check if URL is valid
+    // Check if URL is valid and likely an image
     final isValidUrl = _isValidUrl(imageUrl);
+    final isImageUrl = _isImageUrl(imageUrl);
 
-    if (!isValidUrl) {
+    if (!isValidUrl || !isImageUrl) {
       return _buildErrorWidget();
     }
 
@@ -95,6 +96,22 @@ class ProfessionalImage extends StatelessWidget {
     try {
       final uri = Uri.parse(url);
       return uri.isAbsolute && (uri.scheme == 'http' || uri.scheme == 'https');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  bool _isImageUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      final path = uri.path.toLowerCase();
+      return path.endsWith('.jpg') ||
+             path.endsWith('.jpeg') ||
+             path.endsWith('.png') ||
+             path.endsWith('.gif') ||
+             path.endsWith('.webp') ||
+             path.endsWith('.bmp') ||
+             path.endsWith('.svg');
     } catch (e) {
       return false;
     }

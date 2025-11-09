@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 
 class GlassyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -17,19 +16,14 @@ class GlassyAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: AppBar(
-          title: Text(title),
-          actions: actions,
-          leading: leading,
-          centerTitle: centerTitle,
-          backgroundColor: Colors.white.withValues(alpha: 0.1),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-        ),
-      ),
+    return AppBar(
+      title: Text(title),
+      actions: actions,
+      leading: leading,
+      centerTitle: centerTitle,
+      backgroundColor: Colors.white.withValues(alpha: 0.1),
+      elevation: 0,
+      shadowColor: Colors.transparent,
     );
   }
 

@@ -46,7 +46,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading products: $e')),
+          SnackBar(
+            content: Text('Failed to load products: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     }
@@ -55,7 +58,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: GlassyAppBar(
         title: 'Admin Dashboard',
         actions: [

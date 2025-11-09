@@ -7,9 +7,12 @@ import '../providers/cart_provider.dart';
 import '../services/order_service.dart';
 import '../services/payment_service.dart';
 import '../services/product_service.dart';
+import '../services/connectivity_service.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
+import '../widgets/loading_overlay.dart';
+import '../widgets/retry_widget.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -23,8 +26,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final OrderService _orderService = OrderService();
   final PaymentService _paymentService = PaymentService();
   final ProductService _productService = ProductService();
+  final ConnectivityService _connectivityService = ConnectivityService();
   List<Product> _products = [];
   bool _isLoading = false;
+  bool _hasError = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -33,18 +39,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _loadProducts() async {
-    final products = await _productService.fetchProducts();
-    if (mounted) {
-      setState(() {
-        _products = products.map((product) => Product(
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          imageUrl: product.imageUrl.isNotEmpty ? product.imageUrl : 'https://via.placeholder.com/300x300?text=No+Image',
-          stock: product.stock,
-        )).toList();
-      });
+    try {
+      final products = await _productService.fetchProducts();
+      if (mounted) {
+        setState(() {
+          _products = products.map((product) => Product(
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            imageUrl: product.imageUrl.isNotEmpty ? product.imageUrl : 'https://via.placeholder.com/300x300?text=No+Image',
+            stock: product.stock,
+          )).toList();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'Failed to load product information. Please try again.';
+        });
+      }
     }
   }
 
@@ -56,95 +71,121 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final total = cartItems.fold(0.0, (sum, item) => sum + (item['product'] as Product).price * (item['quantity'] as int));
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Checkout'),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f0f23),
-            ],
+      body: LoadingOverlay(
+        isLoading: _isLoading,
+        loadingMessage: 'Processing your order...',
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1a1a2e),
+                Color(0xFF16213e),
+                Color(0xFF0f0f23),
+              ],
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: GlassyContainer(
-                  child: ListView.builder(
-                    itemCount: cartItems.length,
-                    itemBuilder: (context, index) {
-                      final item = cartItems[index];
-                      final product = item['product'] as Product;
-                      final quantity = item['quantity'] as int;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                product.name,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
-                            Text(
-                              'Qty: $quantity - \$${product.price * quantity}',
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              GlassyContainer(
-                child: Column(
-                  children: [
-                    Text(
-                      'Total: \$${total.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'M-Pesa Phone Number (254...)',
-                        prefixIcon: Icon(Icons.phone, color: Colors.white70),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 20),
-                    _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : GlassyButton(
-                            onPressed: () => _placeOrder(authProvider.user!.id, cartItems, total),
-                            width: double.infinity,
-                            child: const Text(
-                              'Pay with M-Pesa',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+          child: _hasError
+              ? RetryWidget(
+                  title: 'Failed to Load Checkout',
+                  message: _errorMessage,
+                  onRetry: _loadProducts,
+                  icon: Icons.refresh,
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = constraints.maxWidth;
+                    final isWide = screenWidth > 600;
+                    final padding = isWide ? 32.0 : 16.0;
+                    final totalFontSize = isWide ? 24.0 : 20.0;
+                    final buttonFontSize = isWide ? 18.0 : 16.0;
+
+                    return Padding(
+                      padding: EdgeInsets.all(padding),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: GlassyContainer(
+                              child: ListView.builder(
+                                itemCount: cartItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = cartItems[index];
+                                  final product = item['product'] as Product;
+                                  final quantity = item['quantity'] as int;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            product.name,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: isWide ? 16 : 14,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          'Qty: $quantity - \$${product.price * quantity}',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: isWide ? 16 : 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
-                  ],
+                          const SizedBox(height: 20),
+                          GlassyContainer(
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Total: \$${total.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: totalFontSize,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: _phoneController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'M-Pesa Phone Number (254...)',
+                                    prefixIcon: Icon(Icons.phone, color: Colors.white70),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                const SizedBox(height: 20),
+                                GlassyButton(
+                                  onPressed: () => _placeOrder(authProvider.user!.id, cartItems, total),
+                                  width: double.infinity,
+                                  child: Text(
+                                    'Pay with M-Pesa',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: buttonFontSize,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -154,7 +195,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() {
       _isLoading = true;
     });
+
     try {
+      // Check connectivity first
+      final connectivity = await _connectivityService.checkConnectivity();
+      if (!connectivity['internet']!) {
+        throw Exception('No internet connection. Please check your network and try again.');
+      }
+      if (!connectivity['database']!) {
+        throw Exception('Unable to connect to the server. Please try again later.');
+      }
+
       final orderId = DateTime.now().millisecondsSinceEpoch.toString();
       final items = cartItems.map((item) {
         final product = item['product'] as Product;
@@ -188,14 +239,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order placed. Check your phone for M-Pesa prompt.')),
+          const SnackBar(
+            content: Text('Order placed successfully! Check your phone for M-Pesa prompt.'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Order failed: $errorMessage'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _placeOrder(userId, cartItems, total),
+            ),
+          ),
         );
       }
     } finally {

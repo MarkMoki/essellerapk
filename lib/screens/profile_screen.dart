@@ -12,7 +12,7 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Profile'),
       body: Container(
         decoration: const BoxDecoration(
@@ -70,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.shopping_bag,
                       title: 'My Orders',
                       onTap: () {
-                        // Navigate to orders screen
+                        Navigator.pushNamed(context, '/orders');
                       },
                     ),
                     const Divider(color: Colors.white24),
@@ -78,7 +78,7 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.settings,
                       title: 'Settings',
                       onTap: () {
-                        // Navigate to settings screen
+                        Navigator.pushNamed(context, '/settings');
                       },
                     ),
                     const Divider(color: Colors.white24),
@@ -86,7 +86,7 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.help,
                       title: 'Help & Support',
                       onTap: () {
-                        // Navigate to help screen
+                        Navigator.pushNamed(context, '/help');
                       },
                     ),
                   ],

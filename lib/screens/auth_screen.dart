@@ -21,7 +21,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Esaller'),
       body: Container(
         decoration: const BoxDecoration(
@@ -107,20 +107,44 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _authenticate() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       if (_isLogin) {
-        await authProvider.signIn(_emailController.text, _passwordController.text);
+        await authProvider.signIn(_emailController.text.trim(), _passwordController.text);
       } else {
-        await authProvider.signUp(_emailController.text, _passwordController.text);
+        await authProvider.signUp(_emailController.text.trim(), _passwordController.text);
+      }
+
+      // Success - navigation will be handled by AuthWrapper
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isLogin ? 'Login successful!' : 'Account created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Authentication failed: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {

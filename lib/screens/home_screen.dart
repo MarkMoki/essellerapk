@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: GlassyAppBar(
         title: 'Esaller',
         actions: [
@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDashboard() {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,8 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 60), // Account for app bar
           Text(
             'Welcome to Esaller',
-            style: const TextStyle(
-              fontSize: 28,
+            style: TextStyle(
+              fontSize: MediaQuery.of(context).size.width > 600 ? 32 : 28,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -99,124 +99,133 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             'Discover amazing products at great prices',
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: MediaQuery.of(context).size.width > 600 ? 18 : 16,
               color: Colors.white70,
             ),
           ),
           const SizedBox(height: 40),
-          Row(
-            children: [
-              Expanded(
-                child: GlassyContainer(
-                  height: 120,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 600;
+              return Column(
+                children: [
+                  Row(
                     children: [
-                      const Icon(
-                        Icons.shopping_bag,
-                        color: Colors.white,
-                        size: 40,
+                      Expanded(
+                        child: GlassyContainer(
+                          height: isWide ? 140 : 120,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.shopping_bag,
+                                color: Colors.white,
+                                size: isWide ? 50 : 40,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Shop Now',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isWide ? 18 : 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Shop Now',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      SizedBox(width: isWide ? 24 : 16),
+                      Expanded(
+                        child: GlassyContainer(
+                          height: isWide ? 140 : 120,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.category,
+                                color: Colors.white,
+                                size: isWide ? 50 : 40,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Categories',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isWide ? 18 : 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: GlassyContainer(
-                  height: 120,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  SizedBox(height: isWide ? 24 : 16),
+                  Row(
                     children: [
-                      const Icon(
-                        Icons.category,
-                        color: Colors.white,
-                        size: 40,
+                      Expanded(
+                        child: GlassyContainer(
+                          height: isWide ? 140 : 120,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.local_offer,
+                                color: Colors.white,
+                                size: isWide ? 50 : 40,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Deals',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isWide ? 18 : 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Categories',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      SizedBox(width: isWide ? 24 : 16),
+                      Expanded(
+                        child: GlassyContainer(
+                          height: isWide ? 140 : 120,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.favorite,
+                                color: Colors.white,
+                                size: isWide ? 50 : 40,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Favorites',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isWide ? 18 : 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: GlassyContainer(
-                  height: 120,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.local_offer,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Deals',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: GlassyContainer(
-                  height: 120,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.favorite,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Favorites',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
           const SizedBox(height: 40),
-          const Text(
+          Text(
             'Featured Products',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: MediaQuery.of(context).size.width > 600 ? 24 : 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -229,11 +238,11 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             width: double.infinity,
-            child: const Text(
+            child: Text(
               'Browse All Products',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: MediaQuery.of(context).size.width > 600 ? 18 : 16,
                 fontWeight: FontWeight.bold,
               ),
             ),

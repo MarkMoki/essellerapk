@@ -4,6 +4,7 @@ import '../services/product_service.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
+import '../widgets/professional_image.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -21,11 +22,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _stockController = TextEditingController();
   final ProductService _productService = ProductService();
   bool _isLoading = false;
+  bool _showImagePreview = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Add Product'),
       body: Container(
         decoration: const BoxDecoration(
@@ -85,9 +87,52 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       prefixIcon: Icon(Icons.image, color: Colors.white70),
                     ),
                     style: const TextStyle(color: Colors.white),
-                    validator: (value) => value!.isEmpty ? 'Required' : null,
+                    validator: (value) {
+                      if (value!.isEmpty) return 'Required';
+                      final uri = Uri.tryParse(value);
+                      if (uri == null || !uri.isAbsolute || (uri.scheme != 'http' && uri.scheme != 'https')) {
+                        return 'Please enter a valid URL (http or https)';
+                      }
+                      final path = uri.path.toLowerCase();
+                      if (!path.endsWith('.jpg') && !path.endsWith('.jpeg') && !path.endsWith('.png') &&
+                          !path.endsWith('.gif') && !path.endsWith('.webp') && !path.endsWith('.bmp') &&
+                          !path.endsWith('.svg')) {
+                        return 'URL must point to an image file (.jpg, .png, .gif, etc.)';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      setState(() {
+                        _showImagePreview = value.isNotEmpty;
+                      });
+                    },
                   ),
                   const SizedBox(height: 16),
+                  if (_showImagePreview && _imageUrlController.text.isNotEmpty)
+                    Column(
+                      children: [
+                        const Text(
+                          'Image Preview:',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GlassyContainer(
+                          height: 200,
+                          child: ProfessionalImage(
+                            imageUrl: _imageUrlController.text,
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   TextFormField(
                     controller: _stockController,
                     decoration: const InputDecoration(
@@ -143,7 +188,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Failed to add product: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
