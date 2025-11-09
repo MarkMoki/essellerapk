@@ -100,7 +100,11 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.isAuthenticated ? const HomeScreen() : const DashboardScreen();
+    final authProvider = Provider.of<AuthProvider>(context);
+    if (!authProvider.isAuthenticated) {
+      return const DashboardScreen();
+    }
+    // Redirect admin users to admin dashboard
+    return authProvider.isAdmin ? const AdminDashboard() : const HomeScreen();
   }
 }

@@ -21,6 +21,7 @@ class AuthProvider with ChangeNotifier {
       _fetchUserRole();
     }
     _supabase.auth.onAuthStateChange.listen((event) {
+      final wasAuthenticated = _user != null;
       _user = event.session?.user;
       if (_user != null) {
         _fetchUserRole();
@@ -42,9 +43,21 @@ class AuthProvider with ChangeNotifier {
       _role = response['role'];
       notifyListeners();
     } catch (e) {
-      // If profile doesn't exist, role remains null (user)
-      _role = null;
-      notifyListeners();
+      // If profile doesn't exist yet, wait a moment and retry (for new signups)
+      await Future.delayed(const Duration(milliseconds: 500));
+      try {
+        final retryResponse = await _supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', _user!.id)
+            .single();
+        _role = retryResponse['role'];
+        notifyListeners();
+      } catch (retryError) {
+        // If still no profile, default to user role
+        _role = 'user';
+        notifyListeners();
+      }
     }
   }
 
@@ -54,13 +67,7 @@ class AuthProvider with ChangeNotifier {
         email: email,
         password: password,
       );
-      // After signup, insert profile with default role 'user'
-      if (response.user != null) {
-        await _supabase.from('profiles').insert({
-          'id': response.user!.id,
-          'role': 'user',
-        });
-      } else {
+      if (response.user == null) {
         throw Exception('Signup failed: Unable to create account');
       }
     } catch (e) {
