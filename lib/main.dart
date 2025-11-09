@@ -5,6 +5,7 @@ import 'constants.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'screens/auth_screen.dart';
+import 'screens/dashboard_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/checkout_screen.dart';
@@ -33,7 +34,43 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Esaller',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primaryColor: Colors.transparent,
+          scaffoldBackgroundColor: const Color(0xFF0F0F23), // Dark glassy background
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            titleTextStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            iconTheme: IconThemeData(color: Colors.white),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              foregroundColor: Colors.white,
+              shadowColor: Colors.white.withValues(alpha: 0.3),
+              elevation: 10,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.1),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide.none,
+            ),
+            labelStyle: const TextStyle(color: Colors.white70),
+            hintStyle: const TextStyle(color: Colors.white54),
+          ),
+          textTheme: const TextTheme(
+            bodyLarge: TextStyle(color: Colors.white),
+            bodyMedium: TextStyle(color: Colors.white70),
+          ),
         ),
         home: const AuthWrapper(),
         routes: {
@@ -53,6 +90,6 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    return authProvider.isAuthenticated ? const HomeScreen() : const AuthScreen();
+    return authProvider.isAuthenticated ? const HomeScreen() : const DashboardScreen();
   }
 }

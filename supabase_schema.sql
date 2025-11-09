@@ -1,5 +1,5 @@
 -- Enable Row Level Security
-ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+-- Note: RLS on auth.users is enabled by default in Supabase
 
 -- Profiles table
 CREATE TABLE profiles (
@@ -7,6 +7,8 @@ CREATE TABLE profiles (
   role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Products table
 CREATE TABLE products (
@@ -19,6 +21,8 @@ CREATE TABLE products (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+
 -- Orders table
 CREATE TABLE orders (
   id TEXT PRIMARY KEY,
@@ -29,9 +33,12 @@ CREATE TABLE orders (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
 -- RLS Policies
--- Profiles: Users can read/update their own profile
+-- Profiles: Users can read/update/insert their own profile
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Products: Everyone can read, only admins can insert/update/delete
@@ -68,4 +75,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
