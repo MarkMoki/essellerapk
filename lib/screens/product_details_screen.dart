@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/glassy_app_bar.dart';
@@ -150,26 +149,46 @@ class ProductDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        GlassyButton(
-                          onPressed: () {
-                            cartProvider.addItem(product.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${product.name} added to cart'),
-                                duration: const Duration(seconds: 2),
+                        if (product.stock == 0)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.redAccent),
+                            ),
+                            child: const Text(
+                              'Out of Stock',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
-                            );
-                          },
-                          width: double.infinity,
-                          child: Text(
-                            cartProvider.isInCart(product.id) ? 'Add More to Cart' : 'Add to Cart',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: buttonFontSize,
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        else
+                          GlassyButton(
+                            onPressed: () {
+                              cartProvider.addItem(product.id);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${product.name} added to cart'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            width: double.infinity,
+                            child: Text(
+                              cartProvider.isInCart(product.id) ? 'Add More to Cart' : 'Add to Cart',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: buttonFontSize,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),

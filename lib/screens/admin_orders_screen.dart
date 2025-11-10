@@ -49,6 +49,17 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
           _hasError = true;
           _errorMessage = e.toString().replaceFirst('Exception: ', '');
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load orders: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.redAccent,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _loadOrders,
+            ),
+          ),
+        );
       }
     }
   }

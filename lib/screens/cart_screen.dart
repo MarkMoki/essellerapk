@@ -41,6 +41,84 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  void _showEditQuantityDialog(BuildContext context, String productId, int currentQuantity) {
+    final TextEditingController quantityController = TextEditingController(text: currentQuantity.toString());
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF16213e),
+          title: const Text(
+            'Edit Quantity',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: quantityController,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Quantity',
+              labelStyle: TextStyle(color: Colors.white70),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white70),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final newQuantity = int.tryParse(quantityController.text);
+                if (newQuantity != null && newQuantity > 0) {
+                  final product = _products.firstWhere((p) => p.id == productId);
+                  if (newQuantity > product.stock) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Cannot set quantity above available stock (${product.stock})'),
+                        backgroundColor: Colors.orangeAccent,
+                      ),
+                    );
+                  } else {
+                    cartProvider.updateQuantity(productId, newQuantity);
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Quantity updated'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a valid quantity'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                'Update',
+                style: TextStyle(color: Colors.blueAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
@@ -157,7 +235,27 @@ class _CartScreenState extends State<CartScreen> {
                                           size: screenWidth > 600 ? 24 : 20,
                                         ),
                                         onPressed: () {
-                                          cartProvider.addItem(product.id);
+                                          if (cartProvider.getQuantity(product.id) < product.stock) {
+                                            cartProvider.addItem(product.id);
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Cannot add more ${product.name} - stock limit reached'),
+                                                backgroundColor: Colors.orangeAccent,
+                                                duration: const Duration(seconds: 2),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.edit,
+                                          color: Colors.blueAccent,
+                                          size: screenWidth > 600 ? 24 : 20,
+                                        ),
+                                        onPressed: () {
+                                          _showEditQuantityDialog(context, product.id, quantity);
                                         },
                                       ),
                                     ],

@@ -5,6 +5,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
 import '../widgets/professional_image.dart';
+import '../widgets/image_upload_widget.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -23,6 +24,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final ProductService _productService = ProductService();
   bool _isLoading = false;
   bool _showImagePreview = false;
+  String? _uploadedImageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -82,9 +84,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _imageUrlController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Image URL',
-                      prefixIcon: Icon(Icons.image, color: Colors.white70),
+                      prefixIcon: const Icon(Icons.image, color: Colors.white70),
+                      suffixIcon: _imageUrlController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.paste, color: Colors.white70),
+                              onPressed: () async {
+                                // This will be handled by the system clipboard
+                              },
+                            )
+                          : null,
+                      hintText: 'Paste image URL from web (e.g., Unsplash, Imgur, etc.)',
                     ),
                     style: const TextStyle(color: Colors.white),
                     validator: (value) {
@@ -93,44 +104,70 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       if (uri == null || !uri.isAbsolute || (uri.scheme != 'http' && uri.scheme != 'https')) {
                         return 'Please enter a valid URL (http or https)';
                       }
-                      final path = uri.path.toLowerCase();
-                      if (!path.endsWith('.jpg') && !path.endsWith('.jpeg') && !path.endsWith('.png') &&
-                          !path.endsWith('.gif') && !path.endsWith('.webp') && !path.endsWith('.bmp') &&
-                          !path.endsWith('.svg')) {
-                        return 'URL must point to an image file (.jpg, .png, .gif, etc.)';
-                      }
+                      // Allow any online image link, no file extension restriction
                       return null;
                     },
                     onChanged: (value) {
                       setState(() {
-                        _showImagePreview = value.isNotEmpty;
+                        _showImagePreview = value.isNotEmpty && value.trim().isNotEmpty;
                       });
                     },
                   ),
                   const SizedBox(height: 16),
-                  if (_showImagePreview && _imageUrlController.text.isNotEmpty)
+
+                  // Image Upload Widget
+                  ImageUploadWidget(
+                    initialImageUrl: _uploadedImageUrl ?? (_imageUrlController.text.isNotEmpty ? _imageUrlController.text : null),
+                    onImageSelected: (url) {
+                      setState(() {
+                        _uploadedImageUrl = url;
+                        if (url != null) {
+                          _imageUrlController.text = url;
+                        }
+                      });
+                    },
+                    productName: _nameController.text.isEmpty ? 'new_product' : _nameController.text,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Alternative: URL input (shown when no uploaded image)
+                  if (_uploadedImageUrl == null)
                     Column(
                       children: [
                         const Text(
-                          'Image Preview:',
+                          'Or enter Image URL manually:',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        GlassyContainer(
-                          height: 200,
-                          child: ProfessionalImage(
-                            imageUrl: _imageUrlController.text,
-                            width: double.infinity,
-                            height: 200,
-                            fit: BoxFit.cover,
-                            borderRadius: BorderRadius.circular(10),
+                        if (_showImagePreview && _imageUrlController.text.isNotEmpty)
+                          Column(
+                            children: [
+                              const Text(
+                                'URL Image Preview:',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              GlassyContainer(
+                                height: 200,
+                                child: ProfessionalImage(
+                                  imageUrl: _imageUrlController.text,
+                                  width: double.infinity,
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 16),
                       ],
                     ),
                   TextFormField(

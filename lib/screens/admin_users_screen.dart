@@ -56,6 +56,22 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     });
 
     try {
+      // Check if current user is admin
+      final currentUser = _supabase.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No authenticated user');
+      }
+
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+
+      if (profileResponse['role'] != 'admin') {
+        throw Exception('Access denied: Admin privileges required');
+      }
+
       // Fetch all users from auth.users and join with profiles
       final authUsersResponse = await _supabase.auth.admin.listUsers();
       final profilesResponse = await _supabase.from('profiles').select();
@@ -91,12 +107,62 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         });
       }
     } catch (e) {
+      // Handle AuthApiException for expired tokens or insufficient permissions
+      if (e.toString().contains('AuthApiException') &&
+          (e.toString().contains('token is expired') ||
+           e.toString().contains('user not allowed') ||
+           e.toString().contains('not_admin'))) {
+        try {
+          // Attempt to refresh the session
+          await _supabase.auth.refreshSession();
+          // Retry loading users after refresh
+          await _loadUsers();
+          return;
+        } catch (refreshError) {
+          // If refresh fails, show authentication error
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              _hasError = true;
+              _errorMessage = 'Session expired or insufficient permissions. Please sign in again.';
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Session expired or insufficient permissions. Please sign in again.'),
+                backgroundColor: Colors.redAccent,
+                action: SnackBarAction(
+                  label: 'Sign In',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    if (mounted) {
+                      Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+                    }
+                  },
+                ),
+              ),
+            );
+          }
+          return;
+        }
+      }
+
       if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
           _errorMessage = e.toString().replaceFirst('Exception: ', '');
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load users: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.redAccent,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _loadUsers,
+            ),
+          ),
+        );
       }
     }
   }
@@ -118,6 +184,31 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         );
       }
     } catch (e) {
+      // Handle AuthApiException for expired tokens or insufficient permissions
+      if (e.toString().contains('AuthApiException') &&
+          (e.toString().contains('token is expired') ||
+           e.toString().contains('user not allowed') ||
+           e.toString().contains('not_admin'))) {
+        try {
+          // Attempt to refresh the session
+          await _supabase.auth.refreshSession();
+          // Retry updating user role after refresh
+          await _updateUserRole(userId, newRole);
+          return;
+        } catch (refreshError) {
+          // If refresh fails, show authentication error
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Session expired or insufficient permissions. Please sign in again.'),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -128,6 +219,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

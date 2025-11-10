@@ -85,6 +85,37 @@ CREATE POLICY "Admins can update orders" ON orders FOR UPDATE USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
+-- Storage bucket for product images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for product images
+DROP POLICY IF EXISTS "Product images are publicly accessible" ON storage.objects;
+CREATE POLICY "Product images are publicly accessible" ON storage.objects
+FOR SELECT USING (bucket_id = 'product-images');
+
+DROP POLICY IF EXISTS "Admins can upload product images" ON storage.objects;
+CREATE POLICY "Admins can upload product images" ON storage.objects
+FOR INSERT WITH CHECK (
+  bucket_id = 'product-images' AND
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+DROP POLICY IF EXISTS "Admins can update product images" ON storage.objects;
+CREATE POLICY "Admins can update product images" ON storage.objects
+FOR UPDATE USING (
+  bucket_id = 'product-images' AND
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+DROP POLICY IF EXISTS "Admins can delete product images" ON storage.objects;
+CREATE POLICY "Admins can delete product images" ON storage.objects
+FOR DELETE USING (
+  bucket_id = 'product-images' AND
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
@@ -122,3 +153,7 @@ GRANT ALL ON public.profiles TO anon, authenticated;
 GRANT ALL ON public.products TO anon, authenticated;
 GRANT ALL ON public.orders TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.handle_new_user() TO anon, authenticated;
+
+-- Enable service role access for admin operations
+-- Note: This assumes you have a service role key configured in your Supabase client
+-- The service role has full access to auth.users table for admin operations

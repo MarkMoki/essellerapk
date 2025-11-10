@@ -4,11 +4,13 @@ import 'dart:ui';
 class GlassyBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final bool isAdmin;
 
   const GlassyBottomNavigationBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.isAdmin = false,
   });
 
   @override
@@ -39,12 +41,19 @@ class GlassyBottomNavigationBar extends StatelessWidget {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(0, Icons.home, 'Home'),
-              _buildNavItem(1, Icons.shopping_bag, 'Shop'),
-              _buildNavItem(2, Icons.shopping_cart, 'Cart'),
-              _buildNavItem(3, Icons.person, 'Profile'),
-            ],
+            children: isAdmin
+                ? [
+                    _buildNavItem(0, Icons.dashboard, 'Dashboard'),
+                    _buildNavItem(1, Icons.inventory, 'Products'),
+                    _buildNavItem(2, Icons.shopping_cart, 'Orders'),
+                    _buildNavItem(3, Icons.people, 'Users'),
+                  ]
+                : [
+                    _buildNavItem(0, Icons.home, 'Home'),
+                    _buildNavItem(1, Icons.shopping_bag, 'Shop'),
+                    _buildNavItem(2, Icons.shopping_cart, 'Cart'),
+                    _buildNavItem(3, Icons.person, 'Profile'),
+                  ],
           ),
         ),
       ),

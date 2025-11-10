@@ -60,4 +60,13 @@ class CartProvider with ChangeNotifier {
   int getQuantity(String productId) {
     return _items[productId] ?? 0;
   }
+
+  void updateQuantity(String productId, int newQuantity) {
+    if (newQuantity <= 0) {
+      _items.remove(productId);
+    } else {
+      _items[productId] = newQuantity;
+    }
+    notifyListeners();
+  }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../services/product_service.dart';
@@ -264,13 +263,23 @@ class _ShopScreenState extends State<ShopScreen> {
                                               Expanded(
                                                 child: GlassyButton(
                                                   onPressed: () {
-                                                    cartProvider.addItem(product.id);
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text('${product.name} added to cart'),
-                                                        duration: const Duration(seconds: 2),
-                                                      ),
-                                                    );
+                                                    if (product.stock > 0) {
+                                                      cartProvider.addItem(product.id);
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text('${product.name} added to cart'),
+                                                          duration: const Duration(seconds: 2),
+                                                        ),
+                                                      );
+                                                    } else {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text('This product is out of stock'),
+                                                          backgroundColor: Colors.redAccent,
+                                                          duration: Duration(seconds: 2),
+                                                        ),
+                                                      );
+                                                    }
                                                   },
                                                   height: screenWidth > 600 ? 40 : 35,
                                                   child: Icon(
