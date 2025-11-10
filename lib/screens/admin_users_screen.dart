@@ -1,0 +1,291 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/glassy_app_bar.dart';
+import '../widgets/glassy_container.dart';
+import '../widgets/loading_overlay.dart';
+import '../widgets/retry_widget.dart';
+
+class UserProfile {
+  final String id;
+  final String email;
+  final String role;
+  final DateTime createdAt;
+
+  UserProfile({
+    required this.id,
+    required this.email,
+    required this.role,
+    required this.createdAt,
+  });
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      id: json['id'],
+      email: json['email'] ?? '',
+      role: json['role'] ?? 'user',
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+}
+
+class AdminUsersScreen extends StatefulWidget {
+  const AdminUsersScreen({super.key});
+
+  @override
+  State<AdminUsersScreen> createState() => _AdminUsersScreenState();
+}
+
+class _AdminUsersScreenState extends State<AdminUsersScreen> {
+  final SupabaseClient _supabase = Supabase.instance.client;
+  List<UserProfile> _users = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _errorMessage = '';
+    });
+
+    try {
+      // Fetch all profiles (users)
+      final profilesResponse = await _supabase.from('profiles').select();
+
+      final userProfiles = profilesResponse.map((profile) {
+        return UserProfile(
+          id: profile['id'],
+          email: '', // Email not available in profiles table
+          role: profile['role'] ?? 'user',
+          createdAt: DateTime.parse(profile['created_at'] ?? DateTime.now().toIso8601String()),
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _users = userProfiles;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  Future<void> _updateUserRole(String userId, String newRole) async {
+    try {
+      await _supabase.from('profiles').upsert({
+        'id': userId,
+        'role': newRole,
+      });
+
+      _loadUsers(); // Refresh the list
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('User role updated to $newRole'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update user role: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: false,
+      appBar: const GlassyAppBar(title: 'Admin - User Management'),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1a1a2e),
+              Color(0xFF16213e),
+              Color(0xFF0f0f23),
+            ],
+          ),
+        ),
+        child: LoadingOverlay(
+          isLoading: _isLoading,
+          loadingMessage: 'Loading users...',
+          child: _hasError
+              ? RetryWidget(
+                  title: 'Failed to Load Users',
+                  message: _errorMessage,
+                  onRetry: _loadUsers,
+                  icon: Icons.refresh,
+                )
+              : _users.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 80,
+                            color: Colors.white54,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No users found',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 18,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Users will appear here',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _users.length,
+                      itemBuilder: (context, index) {
+                        final user = _users[index];
+                        return GlassyContainer(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            user.email.isNotEmpty ? user.email : 'User ${user.id.substring(0, 8)}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Role: ${user.role.toUpperCase()}',
+                                            style: TextStyle(
+                                              color: user.role == 'admin' ? Colors.purpleAccent : Colors.blueAccent,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: user.role == 'admin' ? Colors.purple : Colors.blue,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        user.role.toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'User ID: ${user.id.substring(0, 8)}...',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Joined: ${_formatDate(user.createdAt)}',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Role:',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: DropdownButton<String>(
+                                        value: user.role,
+                                        dropdownColor: const Color(0xFF16213e),
+                                        style: const TextStyle(color: Colors.white),
+                                        items: const [
+                                          DropdownMenuItem(value: 'user', child: Text('User')),
+                                          DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                                        ],
+                                        onChanged: (value) {
+                                          if (value != null && value != user.role) {
+                                            _updateUserRole(user.id, value);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}

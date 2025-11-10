@@ -5,7 +5,6 @@ import 'constants.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'screens/auth_screen.dart';
-import 'screens/dashboard_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/checkout_screen.dart';
@@ -39,9 +38,10 @@ class MyApp extends StatelessWidget {
       child: ErrorBoundary(
         child: MaterialApp(
           title: 'Esaller',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             primaryColor: Colors.transparent,
-            scaffoldBackgroundColor: const Color(0xFF0F0F23), // Dark glassy background
+            scaffoldBackgroundColor: const Color(0xFF0F0F23),
             appBarTheme: const AppBarTheme(
               backgroundColor: Colors.transparent,
               elevation: 0,
@@ -54,9 +54,9 @@ class MyApp extends StatelessWidget {
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                backgroundColor: Colors.white24,
                 foregroundColor: Colors.white,
-                shadowColor: Colors.white.withValues(alpha: 0.3),
+                shadowColor: Colors.white30,
                 elevation: 10,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
             ),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.1),
+              fillColor: Colors.white10,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
@@ -101,10 +101,28 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    if (!authProvider.isAuthenticated) {
-      return const DashboardScreen();
+
+    // 🚧 Still initializing session / fetching role
+    if (authProvider.user == null && !authProvider.isAuthenticated) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
     }
-    // Redirect admin users to admin dashboard
-    return authProvider.isAdmin ? const AdminDashboard() : const HomeScreen();
+
+    // 🔒 Not logged in → go to AuthScreen
+    if (!authProvider.isAuthenticated) {
+      return const AuthScreen();
+    }
+
+    // 👑 Admin → Admin Dashboard
+    if (authProvider.isAdmin) {
+      return const AdminDashboard();
+    }
+
+    // 🏠 Regular user → Home
+    return const HomeScreen();
   }
 }
+  

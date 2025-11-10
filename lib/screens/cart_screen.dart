@@ -115,7 +115,7 @@ class _CartScreenState extends State<CartScreen> {
                                           style: const TextStyle(color: Colors.white70),
                                         ),
                                         Text(
-                                          '\$${product.price * quantity}',
+                                          'Ksh${product.price * quantity}',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: priceFontSize,
@@ -149,7 +149,7 @@ class _CartScreenState extends State<CartScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Total: \$${total.toStringAsFixed(2)}',
+                          'Total: Ksh${total.toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,

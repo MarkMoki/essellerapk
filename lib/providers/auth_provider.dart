@@ -21,7 +21,6 @@ class AuthProvider with ChangeNotifier {
       _fetchUserRole();
     }
     _supabase.auth.onAuthStateChange.listen((event) {
-      final wasAuthenticated = _user != null;
       _user = event.session?.user;
       if (_user != null) {
         _fetchUserRole();

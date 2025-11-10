@@ -130,7 +130,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                           ),
                                         ),
                                         Text(
-                                          'Qty: $quantity - \$${product.price * quantity}',
+                                          'Qty: $quantity - Ksh${product.price * quantity}',
                                           style: TextStyle(
                                             color: Colors.white70,
                                             fontSize: isWide ? 16 : 14,
@@ -148,7 +148,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             child: Column(
                               children: [
                                 Text(
-                                  'Total: \$${total.toStringAsFixed(2)}',
+                                  'Total: Ksh${total.toStringAsFixed(2)}',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: totalFontSize,

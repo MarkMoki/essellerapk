@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../models/order.dart';
-import '../providers/auth_provider.dart';
 import '../services/order_service.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
 
-class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({super.key});
+class AdminOrdersScreen extends StatefulWidget {
+  const AdminOrdersScreen({super.key});
 
   @override
-  State<OrdersScreen> createState() => _OrdersScreenState();
+  State<AdminOrdersScreen> createState() => _AdminOrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> {
+class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   final OrderService _orderService = OrderService();
   List<Order> _orders = [];
   bool _isLoading = true;
@@ -36,13 +34,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
     });
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final userId = authProvider.user?.id;
-      if (userId == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final orders = await _orderService.fetchUserOrders(userId);
+      // Fetch all orders for admin
+      final orders = await _orderService.fetchAllOrders();
       if (mounted) {
         setState(() {
           _orders = orders;
@@ -60,11 +53,35 @@ class _OrdersScreenState extends State<OrdersScreen> {
     }
   }
 
+  Future<void> _updateOrderStatus(String orderId, String newStatus) async {
+    try {
+      await _orderService.updateOrderStatus(orderId, newStatus);
+      _loadOrders(); // Refresh the list
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order status updated to $newStatus'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update order status: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: false,
-      appBar: const GlassyAppBar(title: 'My Orders'),
+      appBar: const GlassyAppBar(title: 'Admin - Orders Management'),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -93,13 +110,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.shopping_bag_outlined,
+                            Icons.shopping_cart_outlined,
                             size: 80,
                             color: Colors.white54,
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'No orders yet',
+                            'No orders found',
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 18,
@@ -107,7 +124,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Your orders will appear here',
+                            'Orders will appear here',
                             style: TextStyle(
                               color: Colors.white54,
                               fontSize: 14,
@@ -161,6 +178,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
+                                  'User ID: ${order.userId.substring(0, 8)}',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
                                   'Date: ${_formatDate(order.createdAt)}',
                                   style: const TextStyle(
                                     color: Colors.white70,
@@ -210,6 +235,38 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                     ],
                                   ),
                                 )),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Update Status:',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: DropdownButton<String>(
+                                        value: order.status,
+                                        dropdownColor: const Color(0xFF16213e),
+                                        style: const TextStyle(color: Colors.white),
+                                        items: const [
+                                          DropdownMenuItem(value: 'pending_payment', child: Text('Pending Payment')),
+                                          DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                                          DropdownMenuItem(value: 'shipped', child: Text('Shipped')),
+                                          DropdownMenuItem(value: 'delivered', child: Text('Delivered')),
+                                        ],
+                                        onChanged: (value) {
+                                          if (value != null && value != order.status) {
+                                            _updateOrderStatus(order.id, value);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),

@@ -200,7 +200,7 @@ class _ShopScreenState extends State<ShopScreen> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                '\$${product.price.toStringAsFixed(2)}',
+                                                'Ksh${product.price.toStringAsFixed(2)}',
                                                 style: TextStyle(
                                                   color: Colors.white70,
                                                   fontSize: priceFontSize,

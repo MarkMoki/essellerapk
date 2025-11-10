@@ -35,4 +35,13 @@ class OrderService {
       throw Exception('Failed to update order status: $e');
     }
   }
+
+  Future<List<Order>> fetchAllOrders() async {
+    try {
+      final response = await _supabase.from('orders').select();
+      return response.map((json) => Order.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch all orders: $e');
+    }
+  }
 }
