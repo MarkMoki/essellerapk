@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/glassy_app_bar.dart';
@@ -17,7 +18,51 @@ class ProductDetailsScreen extends StatelessWidget {
     final cartProvider = Provider.of<CartProvider>(context);
     return Scaffold(
       extendBodyBehindAppBar: false,
-      appBar: const GlassyAppBar(title: 'Product Details'),
+      appBar: GlassyAppBar(
+        title: 'Product Details',
+        actions: [
+          Consumer<CartProvider>(
+            builder: (context, cartProvider, child) {
+              final itemCount = cartProvider.itemCount;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart, color: Colors.white),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/cart');
+                    },
+                  ),
+                  if (itemCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          itemCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -109,12 +154,15 @@ class ProductDetailsScreen extends StatelessWidget {
                           onPressed: () {
                             cartProvider.addItem(product.id);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${product.name} added to cart')),
+                              SnackBar(
+                                content: Text('${product.name} added to cart'),
+                                duration: const Duration(seconds: 2),
+                              ),
                             );
                           },
                           width: double.infinity,
                           child: Text(
-                            'Add to Cart',
+                            cartProvider.isInCart(product.id) ? 'Add More to Cart' : 'Add to Cart',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,

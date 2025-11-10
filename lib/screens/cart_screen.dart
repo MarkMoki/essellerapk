@@ -45,7 +45,7 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     final cartItems = cartProvider.getCartItems(_products);
-    final total = cartItems.fold(0.0, (sum, item) => sum + (item['product'] as Product).price * (item['quantity'] as int));
+    final total = cartProvider.getTotalAmount(_products);
 
     return Scaffold(
       extendBodyBehindAppBar: false,
@@ -110,12 +110,16 @@ class _CartScreenState extends State<CartScreen> {
                                             fontSize: fontSize,
                                           ),
                                         ),
+                                        const SizedBox(height: 4),
                                         Text(
-                                          'Quantity: $quantity',
-                                          style: const TextStyle(color: Colors.white70),
+                                          'Ksh${product.price.toStringAsFixed(2)} each',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: priceFontSize - 2,
+                                          ),
                                         ),
                                         Text(
-                                          'Ksh${product.price * quantity}',
+                                          'Subtotal: Ksh${(product.price * quantity).toStringAsFixed(2)}',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: priceFontSize,
@@ -125,15 +129,38 @@ class _CartScreenState extends State<CartScreen> {
                                       ],
                                     ),
                                   ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.remove_circle,
-                                      color: Colors.redAccent,
-                                      size: screenWidth > 600 ? 32 : 28,
-                                    ),
-                                    onPressed: () {
-                                      cartProvider.removeItem(product.id);
-                                    },
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.remove_circle,
+                                          color: Colors.redAccent,
+                                          size: screenWidth > 600 ? 24 : 20,
+                                        ),
+                                        onPressed: () {
+                                          cartProvider.removeItem(product.id);
+                                        },
+                                      ),
+                                      Text(
+                                        '$quantity',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: screenWidth > 600 ? 16 : 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.add_circle,
+                                          color: Colors.greenAccent,
+                                          size: screenWidth > 600 ? 24 : 20,
+                                        ),
+                                        onPressed: () {
+                                          cartProvider.addItem(product.id);
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

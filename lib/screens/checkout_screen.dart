@@ -68,7 +68,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cartProvider = Provider.of<CartProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final cartItems = cartProvider.getCartItems(_products);
-    final total = cartItems.fold(0.0, (sum, item) => sum + (item['product'] as Product).price * (item['quantity'] as int));
+    final total = cartProvider.getTotalAmount(_products);
 
     return Scaffold(
       extendBodyBehindAppBar: false,
@@ -121,19 +121,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
-                                          child: Text(
-                                            product.name,
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: isWide ? 16 : 14,
-                                            ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                product.name,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: isWide ? 16 : 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Qty: $quantity × Ksh${product.price.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: isWide ? 14 : 12,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                         Text(
-                                          'Qty: $quantity - Ksh${product.price * quantity}',
+                                          'Ksh${(product.price * quantity).toStringAsFixed(2)}',
                                           style: TextStyle(
-                                            color: Colors.white70,
+                                            color: Colors.white,
                                             fontSize: isWide ? 16 : 14,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ],
@@ -160,10 +174,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   controller: _phoneController,
                                   decoration: const InputDecoration(
                                     labelText: 'M-Pesa Phone Number (254...)',
+                                    hintText: 'e.g., 254712345678',
                                     prefixIcon: Icon(Icons.phone, color: Colors.white70),
                                   ),
                                   keyboardType: TextInputType.phone,
                                   style: const TextStyle(color: Colors.white),
+                                  maxLength: 12,
                                 ),
                                 const SizedBox(height: 20),
                                 GlassyButton(
@@ -192,6 +208,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _placeOrder(String userId, List<Map<String, dynamic>> cartItems, double total) async {
+    // Validate phone number
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your M-Pesa phone number'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    if (!RegExp(r'^254\d{9}$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid phone number in format: 254XXXXXXXXX'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -230,7 +267,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       await _orderService.createOrder(order);
 
       // Initiate payment
-      await _paymentService.initiateSTKPush(_phoneController.text, total, orderId);
+      await _paymentService.initiateSTKPush(phone, total, orderId);
 
       // Clear cart
       if (mounted) {
@@ -242,9 +279,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SnackBar(
             content: Text('Order placed successfully! Check your phone for M-Pesa prompt.'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
           ),
         );
-        Navigator.pop(context);
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       if (mounted) {

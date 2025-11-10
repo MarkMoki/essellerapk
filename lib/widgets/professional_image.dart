@@ -105,13 +105,30 @@ class ProfessionalImage extends StatelessWidget {
     try {
       final uri = Uri.parse(url);
       final path = uri.path.toLowerCase();
-      return path.endsWith('.jpg') ||
+      final host = uri.host.toLowerCase();
+
+      // Check for common image extensions
+      final hasImageExtension = path.endsWith('.jpg') ||
              path.endsWith('.jpeg') ||
              path.endsWith('.png') ||
              path.endsWith('.gif') ||
              path.endsWith('.webp') ||
              path.endsWith('.bmp') ||
              path.endsWith('.svg');
+
+      // Allow Unsplash and other image hosting services
+      final isImageHost = host.contains('unsplash.com') ||
+                         host.contains('pexels.com') ||
+                         host.contains('pixabay.com') ||
+                         host.contains('imgur.com') ||
+                         host.contains('cloudinary.com') ||
+                         host.contains('images.unsplash.com');
+
+      // Allow direct image URLs without extensions (common with CDNs)
+      final isLikelyImageUrl = !path.contains('.') ||
+                              path.split('.').last.length <= 5; // Short extensions
+
+      return hasImageExtension || isImageHost || isLikelyImageUrl;
     } catch (e) {
       return false;
     }

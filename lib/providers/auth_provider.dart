@@ -16,18 +16,26 @@ class AuthProvider with ChangeNotifier {
   }
 
   void _initialize() {
-    _user = _supabase.auth.currentUser;
+    // Check current session immediately
+    final session = _supabase.auth.currentSession;
+    _user = session?.user;
+
     if (_user != null) {
       _fetchUserRole();
+    } else {
+      // No user logged in, set role to null
+      _role = null;
     }
+
+    // Listen for auth state changes
     _supabase.auth.onAuthStateChange.listen((event) {
       _user = event.session?.user;
       if (_user != null) {
         _fetchUserRole();
       } else {
         _role = null;
+        notifyListeners();
       }
-      notifyListeners();
     });
   }
 
@@ -39,7 +47,7 @@ class AuthProvider with ChangeNotifier {
           .select('role')
           .eq('id', _user!.id)
           .single();
-      _role = response['role'];
+      _role = response['role'] ?? 'user'; // Default to user if null
       notifyListeners();
     } catch (e) {
       // If profile doesn't exist yet, wait a moment and retry (for new signups)
@@ -50,7 +58,7 @@ class AuthProvider with ChangeNotifier {
             .select('role')
             .eq('id', _user!.id)
             .single();
-        _role = retryResponse['role'];
+        _role = retryResponse['role'] ?? 'user'; // Default to user if null
         notifyListeners();
       } catch (retryError) {
         // If still no profile, default to user role

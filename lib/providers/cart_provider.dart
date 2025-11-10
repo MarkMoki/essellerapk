@@ -9,24 +9,23 @@ class CartProvider with ChangeNotifier {
   int get itemCount => _items.values.fold(0, (sum, quantity) => sum + quantity);
 
   double get totalAmount {
-    // This would need product prices, but for now, assume we have a list of products
-    // In real app, fetch prices or pass products
-    return 0.0; // Placeholder
+    // Calculate total from cart items - this will be computed when getCartItems is called
+    return 0.0; // Will be calculated in screens where products are available
   }
 
-  void addItem(String productId) {
+  void addItem(String productId, {int quantity = 1}) {
     if (_items.containsKey(productId)) {
-      _items[productId] = _items[productId]! + 1;
+      _items[productId] = _items[productId]! + quantity;
     } else {
-      _items[productId] = 1;
+      _items[productId] = quantity;
     }
     notifyListeners();
   }
 
-  void removeItem(String productId) {
+  void removeItem(String productId, {int quantity = 1}) {
     if (_items.containsKey(productId)) {
-      if (_items[productId]! > 1) {
-        _items[productId] = _items[productId]! - 1;
+      if (_items[productId]! > quantity) {
+        _items[productId] = _items[productId]! - quantity;
       } else {
         _items.remove(productId);
       }
@@ -47,5 +46,18 @@ class CartProvider with ChangeNotifier {
         'quantity': entry.value,
       };
     }).toList();
+  }
+
+  double getTotalAmount(List<Product> products) {
+    return getCartItems(products).fold(0.0, (sum, item) =>
+      sum + (item['product'] as Product).price * (item['quantity'] as int));
+  }
+
+  bool isInCart(String productId) {
+    return _items.containsKey(productId);
+  }
+
+  int getQuantity(String productId) {
+    return _items[productId] ?? 0;
   }
 }

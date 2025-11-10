@@ -56,17 +56,33 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     });
 
     try {
-      // Fetch all profiles (users)
+      // Fetch all users from auth.users and join with profiles
+      final authUsersResponse = await _supabase.auth.admin.listUsers();
       final profilesResponse = await _supabase.from('profiles').select();
 
-      final userProfiles = profilesResponse.map((profile) {
+      final authUsers = authUsersResponse;
+      final profiles = profilesResponse;
+
+      final userProfiles = authUsers.map((authUser) {
+        final profile = profiles.firstWhere(
+          (p) => p['id'] == authUser.id,
+          orElse: () => {'id': authUser.id, 'role': 'user', 'created_at': DateTime.now().toIso8601String()},
+        );
+
         return UserProfile(
-          id: profile['id'],
-          email: '', // Email not available in profiles table
+          id: authUser.id,
+          email: authUser.email ?? '',
           role: profile['role'] ?? 'user',
-          createdAt: DateTime.parse(profile['created_at'] ?? DateTime.now().toIso8601String()),
+          createdAt: DateTime.tryParse(profile['created_at'] ?? '') ?? DateTime.now(),
         );
       }).toList();
+
+      // Sort users: admins first, then regular users, newest first
+      userProfiles.sort((a, b) {
+        if (a.role == 'admin' && b.role != 'admin') return -1;
+        if (a.role != 'admin' && b.role == 'admin') return 1;
+        return b.createdAt.compareTo(a.createdAt); // Newest first for same role
+      });
 
       if (mounted) {
         setState(() {
@@ -169,11 +185,40 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _users.length,
-                      itemBuilder: (context, index) {
-                        final user = _users[index];
+                  : Column(
+                      children: [
+                        // Summary cards
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _buildSummaryCard(
+                                  'Total Users',
+                                  _users.length.toString(),
+                                  Icons.people,
+                                  Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildSummaryCard(
+                                  'Admins',
+                                  _users.where((u) => u.role == 'admin').length.toString(),
+                                  Icons.admin_panel_settings,
+                                  Colors.purple,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Users list
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _users.length,
+                            itemBuilder: (context, index) {
+                              final user = _users[index];
                         return GlassyContainer(
                           margin: const EdgeInsets.only(bottom: 16),
                           child: Padding(
@@ -278,7 +323,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             ),
                           ),
                         );
-                      },
+                            },
+                          ),
+                        ),
+                      ],
                     ),
         ),
       ),
@@ -287,5 +335,40 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+    return GlassyContainer(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

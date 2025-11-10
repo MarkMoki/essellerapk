@@ -102,15 +102,6 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
-    // 🚧 Still initializing session / fetching role
-    if (authProvider.user == null && !authProvider.isAuthenticated) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
-      );
-    }
-
     // 🔒 Not logged in → go to AuthScreen
     if (!authProvider.isAuthenticated) {
       return const AuthScreen();
