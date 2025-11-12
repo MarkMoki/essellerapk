@@ -75,6 +75,22 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const Divider(color: Colors.white24),
                     _buildProfileOption(
+                      icon: Icons.person,
+                      title: 'Profile',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/user-profile');
+                      },
+                    ),
+                    const Divider(color: Colors.white24),
+                    _buildProfileOption(
+                      icon: Icons.location_on,
+                      title: 'Addresses',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/user-addresses');
+                      },
+                    ),
+                    const Divider(color: Colors.white24),
+                    _buildProfileOption(
                       icon: Icons.settings,
                       title: 'Settings',
                       onTap: () {

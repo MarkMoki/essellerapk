@@ -86,6 +86,18 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                   const SizedBox(height: 20),
+                  if (_isLogin) ...[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/forgot-password');
+                      },
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                   TextButton(
                     onPressed: () {
                       setState(() {

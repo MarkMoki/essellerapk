@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
-import '../widgets/professional_image.dart';
 import '../widgets/image_upload_widget.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -19,11 +20,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
-  final _imageUrlController = TextEditingController();
   final _stockController = TextEditingController();
   final ProductService _productService = ProductService();
   bool _isLoading = false;
-  bool _showImagePreview = false;
   String? _uploadedImageUrl;
 
   @override
@@ -82,94 +81,38 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _imageUrlController,
-                    decoration: InputDecoration(
-                      labelText: 'Image URL',
-                      prefixIcon: const Icon(Icons.image, color: Colors.white70),
-                      suffixIcon: _imageUrlController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.paste, color: Colors.white70),
-                              onPressed: () async {
-                                // This will be handled by the system clipboard
-                              },
-                            )
-                          : null,
-                      hintText: 'Paste image URL from web (e.g., Unsplash, Imgur, etc.)',
-                    ),
-                    style: const TextStyle(color: Colors.white),
-                    validator: (value) {
-                      if (value!.isEmpty) return 'Required';
-                      final uri = Uri.tryParse(value);
-                      if (uri == null || !uri.isAbsolute || (uri.scheme != 'http' && uri.scheme != 'https')) {
-                        return 'Please enter a valid URL (http or https)';
-                      }
-                      // Allow any online image link, no file extension restriction
-                      return null;
-                    },
-                    onChanged: (value) {
-                      setState(() {
-                        _showImagePreview = value.isNotEmpty && value.trim().isNotEmpty;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
 
-                  // Image Upload Widget
+                  // Image Upload Widget - Required
+                  const Text(
+                    'Product Image *',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   ImageUploadWidget(
-                    initialImageUrl: _uploadedImageUrl ?? (_imageUrlController.text.isNotEmpty ? _imageUrlController.text : null),
+                    initialImageUrl: _uploadedImageUrl,
                     onImageSelected: (url) {
                       setState(() {
                         _uploadedImageUrl = url;
-                        if (url != null) {
-                          _imageUrlController.text = url;
-                        }
                       });
                     },
                     productName: _nameController.text.isEmpty ? 'new_product' : _nameController.text,
                   ),
-                  const SizedBox(height: 16),
-
-                  // Alternative: URL input (shown when no uploaded image)
                   if (_uploadedImageUrl == null)
-                    Column(
-                      children: [
-                        const Text(
-                          'Or enter Image URL manually:',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                          ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Please upload a product image',
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 12,
                         ),
-                        const SizedBox(height: 8),
-                        if (_showImagePreview && _imageUrlController.text.isNotEmpty)
-                          Column(
-                            children: [
-                              const Text(
-                                'URL Image Preview:',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              GlassyContainer(
-                                height: 200,
-                                child: ProfessionalImage(
-                                  imageUrl: _imageUrlController.text,
-                                  width: double.infinity,
-                                  height: 200,
-                                  fit: BoxFit.cover,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
-                      ],
+                      ),
                     ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _stockController,
                     decoration: const InputDecoration(
@@ -206,19 +149,43 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Future<void> _addProduct() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validate image upload
+    if (_uploadedImageUrl == null || _uploadedImageUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a product image'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
     try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      // Check if seller account is expired
+      if (authProvider.isSeller) {
+        final isActive = await authProvider.isSellerActive;
+        if (!isActive) {
+          throw Exception('Seller account is expired. Please contact admin to renew your account.');
+        }
+      }
+
       final product = Product(
         id: DateTime.now().toString(), // Simple ID
+        sellerId: authProvider.user!.id,
         name: _nameController.text,
         description: _descriptionController.text,
         price: double.parse(_priceController.text),
-        imageUrl: _imageUrlController.text,
+        imageUrl: _uploadedImageUrl!,
         stock: int.parse(_stockController.text),
       );
-      await _productService.addProduct(product);
+
+      await _productService.addProduct(product, authProvider);
       if (mounted) {
         Navigator.pop(context);
       }

@@ -173,11 +173,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(order.status),
+                                        color: _getStatusColor(order.status.name),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        order.status.toUpperCase(),
+                                        order.status.displayName.toUpperCase(),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,
@@ -259,19 +259,19 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
-                                      child: DropdownButton<String>(
+                                      child: DropdownButton<OrderStatus>(
                                         value: order.status,
                                         dropdownColor: const Color(0xFF16213e),
                                         style: const TextStyle(color: Colors.white),
-                                        items: const [
-                                          DropdownMenuItem(value: 'pending_payment', child: Text('Pending Payment')),
-                                          DropdownMenuItem(value: 'paid', child: Text('Paid')),
-                                          DropdownMenuItem(value: 'shipped', child: Text('Shipped')),
-                                          DropdownMenuItem(value: 'delivered', child: Text('Delivered')),
-                                        ],
+                                        items: OrderStatus.values.map((status) {
+                                          return DropdownMenuItem(
+                                            value: status,
+                                            child: Text(status.displayName),
+                                          );
+                                        }).toList(),
                                         onChanged: (value) {
                                           if (value != null && value != order.status) {
-                                            _updateOrderStatus(order.id, value);
+                                            _updateOrderStatus(order.id, value.toJsonString());
                                           }
                                         },
                                       ),

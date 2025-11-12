@@ -174,6 +174,19 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         'role': newRole,
       });
 
+      // If promoting to seller, create seller record with 30-day expiration
+      if (newRole == 'seller') {
+        final expiresAt = DateTime.now().add(const Duration(days: 30));
+        await _supabase.from('sellers').upsert({
+          'id': userId,
+          'created_by': _supabase.auth.currentUser!.id,
+          'expires_at': expiresAt.toIso8601String(),
+        });
+      } else if (newRole != 'seller') {
+        // If changing from seller to another role, remove seller record
+        await _supabase.from('sellers').delete().eq('id', userId);
+      }
+
       _loadUsers(); // Refresh the list
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -337,7 +350,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                           Text(
                                             'Role: ${user.role.toUpperCase()}',
                                             style: TextStyle(
-                                              color: user.role == 'admin' ? Colors.purpleAccent : Colors.blueAccent,
+                                              color: user.role == 'admin' ? Colors.purpleAccent : user.role == 'seller' ? Colors.orangeAccent : Colors.blueAccent,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -351,7 +364,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: user.role == 'admin' ? Colors.purple : Colors.blue,
+                                        color: user.role == 'admin' ? Colors.purple : user.role == 'seller' ? Colors.orange : Colors.blue,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
@@ -401,6 +414,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                         items: const [
                                           DropdownMenuItem(value: 'user', child: Text('User')),
                                           DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                                          DropdownMenuItem(value: 'seller', child: Text('Seller')),
                                         ],
                                         onChanged: (value) {
                                           if (value != null && value != user.role) {

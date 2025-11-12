@@ -1,9 +1,74 @@
+enum OrderStatus {
+  pendingPayment,
+  paid,
+  shipped,
+  delivered,
+  cancelled,
+  refunded,
+}
+
+extension OrderStatusExtension on OrderStatus {
+  String get displayName {
+    switch (this) {
+      case OrderStatus.pendingPayment:
+        return 'Pending Payment';
+      case OrderStatus.paid:
+        return 'Paid';
+      case OrderStatus.shipped:
+        return 'Shipped';
+      case OrderStatus.delivered:
+        return 'Delivered';
+      case OrderStatus.cancelled:
+        return 'Cancelled';
+      case OrderStatus.refunded:
+        return 'Refunded';
+    }
+  }
+
+  static OrderStatus fromString(String status) {
+    switch (status) {
+      case 'pending_payment':
+        return OrderStatus.pendingPayment;
+      case 'paid':
+        return OrderStatus.paid;
+      case 'shipped':
+        return OrderStatus.shipped;
+      case 'delivered':
+        return OrderStatus.delivered;
+      case 'cancelled':
+        return OrderStatus.cancelled;
+      case 'refunded':
+        return OrderStatus.refunded;
+      default:
+        return OrderStatus.pendingPayment;
+    }
+  }
+
+  String toJsonString() {
+    switch (this) {
+      case OrderStatus.pendingPayment:
+        return 'pending_payment';
+      case OrderStatus.paid:
+        return 'paid';
+      case OrderStatus.shipped:
+        return 'shipped';
+      case OrderStatus.delivered:
+        return 'delivered';
+      case OrderStatus.cancelled:
+        return 'cancelled';
+      case OrderStatus.refunded:
+        return 'refunded';
+    }
+  }
+}
+
 class Order {
   final String id;
   final String userId;
   final List<OrderItem> items;
   final double totalAmount;
-  final String status; // 'pending_payment', 'paid', 'shipped', 'delivered'
+  final OrderStatus status;
+  final String? shippingAddressId;
   final DateTime createdAt;
 
   Order({
@@ -13,6 +78,7 @@ class Order {
     required this.totalAmount,
     required this.status,
     required this.createdAt,
+    this.shippingAddressId,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -21,7 +87,8 @@ class Order {
       userId: json['user_id'],
       items: (json['items'] as List).map((item) => OrderItem.fromJson(item)).toList(),
       totalAmount: json['total_amount'],
-      status: json['status'],
+      status: OrderStatusExtension.fromString(json['status']),
+      shippingAddressId: json['shipping_address_id'],
       createdAt: DateTime.parse(json['created_at']),
     );
   }
@@ -32,7 +99,8 @@ class Order {
       'user_id': userId,
       'items': items.map((item) => item.toJson()).toList(),
       'total_amount': totalAmount,
-      'status': status,
+      'status': status.toJsonString(),
+      'shipping_address_id': shippingAddressId,
       'created_at': createdAt.toIso8601String(),
     };
   }

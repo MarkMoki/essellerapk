@@ -145,11 +145,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(order.status),
+                                        color: _getStatusColor(order.status.name),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        order.status.toUpperCase(),
+                                        order.status.displayName.toUpperCase(),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,

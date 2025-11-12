@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
@@ -224,13 +226,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
     try {
       final updatedProduct = Product(
         id: widget.product.id,
+        sellerId: widget.product.sellerId,
         name: _nameController.text,
         description: _descriptionController.text,
         price: double.parse(_priceController.text),
         imageUrl: _imageUrlController.text,
         stock: int.parse(_stockController.text),
       );
-      await _productService.updateProduct(updatedProduct);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await _productService.updateProduct(updatedProduct, authProvider);
       if (mounted) {
         Navigator.pop(context);
       }

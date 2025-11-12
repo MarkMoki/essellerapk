@@ -71,14 +71,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
       if (mounted) {
         setState(() {
-          _products = products.map((product) => Product(
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            imageUrl: product.imageUrl.isNotEmpty ? product.imageUrl : 'https://via.placeholder.com/300x300?text=No+Image',
-            stock: product.stock,
-          )).toList();
+          _products = products;
           _recentOrders = recentOrders;
           _totalUsers = usersResponse.length;
           _totalRevenue = totalRevenue;
@@ -140,20 +133,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending_payment':
+  Color _getStatusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pendingPayment:
         return Colors.orange;
-      case 'paid':
+      case OrderStatus.paid:
         return Colors.blue;
-      case 'shipped':
+      case OrderStatus.shipped:
         return Colors.purple;
-      case 'delivered':
+      case OrderStatus.delivered:
         return Colors.green;
-      case 'cancelled':
+      case OrderStatus.cancelled:
         return Colors.red;
-      default:
-        return Colors.grey;
+      case OrderStatus.refunded:
+        return Colors.teal;
     }
   }
 
@@ -361,7 +354,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  order.status.toUpperCase(),
+                                  order.status.displayName.toUpperCase(),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 10,
@@ -472,7 +465,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
                             onPressed: () async {
-                              await _productService.deleteProduct(product.id);
+                              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                              await _productService.deleteProduct(product.id, authProvider);
                               _loadDashboardData();
                             },
                           ),
@@ -550,7 +544,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.redAccent),
                     onPressed: () async {
-                      await _productService.deleteProduct(product.id);
+                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                      await _productService.deleteProduct(product.id, authProvider);
                       _loadDashboardData();
                     },
                   ),

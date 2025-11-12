@@ -55,14 +55,7 @@ class _ShopScreenState extends State<ShopScreen> {
       final products = await _productService.fetchProducts();
       if (mounted) {
         setState(() {
-          _products = products.map((product) => Product(
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            imageUrl: product.imageUrl.isNotEmpty ? product.imageUrl : 'https://via.placeholder.com/300x300?text=No+Image',
-            stock: product.stock,
-          )).toList();
+          _products = products;
           _isLoading = false;
         });
       }

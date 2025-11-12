@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 class GlassyButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget child;
   final double? width;
   final double? height;
@@ -12,7 +12,7 @@ class GlassyButton extends StatelessWidget {
 
   const GlassyButton({
     super.key,
-    required this.onPressed,
+    this.onPressed,
     required this.child,
     this.width,
     this.height,
@@ -24,7 +24,7 @@ class GlassyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onPressed,
+      onTap: onPressed != null ? () => onPressed!() : null,
       child: Container(
         width: width,
         height: height ?? 50,

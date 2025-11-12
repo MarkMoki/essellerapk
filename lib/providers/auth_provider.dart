@@ -1,15 +1,31 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/seller.dart';
+import '../models/user.dart';
+import '../services/user_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final UserService _userService = UserService();
   User? _user;
+  UserProfile? _userProfile;
   String? _role;
+  Timer? _sessionTimer;
+  static const Duration _sessionTimeout = Duration(hours: 24); // 24 hour session
 
   User? get user => _user;
+  UserProfile? get userProfile => _userProfile;
   String? get role => _role;
   bool get isAuthenticated => _user != null;
   bool get isAdmin => _role == 'admin';
+  bool get isSeller => _role == 'seller';
+
+  Future<bool> get isSellerActive async {
+    if (!isSeller) return false;
+    final sellerInfo = await getSellerInfo();
+    return sellerInfo != null && !sellerInfo.isExpired;
+  }
 
   AuthProvider() {
     _initialize();
@@ -21,6 +37,7 @@ class AuthProvider with ChangeNotifier {
     _user = session?.user;
 
     if (_user != null) {
+      _startSessionTimer();
       _fetchUserRole();
     } else {
       // No user logged in, set role to null
@@ -31,41 +48,96 @@ class AuthProvider with ChangeNotifier {
     _supabase.auth.onAuthStateChange.listen((event) {
       _user = event.session?.user;
       if (_user != null) {
+        _startSessionTimer();
         _fetchUserRole();
       } else {
-        _role = null;
+        _clearSession();
         notifyListeners();
       }
     });
   }
 
+  void _startSessionTimer() {
+    _sessionTimer?.cancel();
+    _sessionTimer = Timer(_sessionTimeout, () {
+      // Session expired, sign out user
+      signOut();
+    });
+  }
+
+  void _clearSession() {
+    _user = null;
+    _userProfile = null;
+    _role = null;
+    _sessionTimer?.cancel();
+    _sessionTimer = null;
+  }
+
   Future<void> _fetchUserRole() async {
     if (_user == null) return;
+
     try {
+      // First, ensure profile exists
+      await _ensureProfileExists();
+
+      // Fetch role
       final response = await _supabase
           .from('profiles')
           .select('role')
           .eq('id', _user!.id)
           .single();
-      _role = response['role'] ?? 'user'; // Default to user if null
+
+      _role = response['role'] ?? 'user';
+
+      // Fetch user profile
+      _userProfile = await _userService.getUserProfile(_user!.id);
+
+      // Check seller status if user is a seller
+      if (_role == 'seller') {
+        final sellerInfo = await getSellerInfo();
+        if (sellerInfo == null) {
+          // No seller record found, downgrade to user
+          await _updateUserRole('user');
+          _role = 'user';
+        } else if (sellerInfo.isExpired) {
+          // Seller expired - keep role but functionality will be restricted
+          // Don't change role, let UI handle restrictions
+        }
+      }
+
       notifyListeners();
     } catch (e) {
-      // If profile doesn't exist yet, wait a moment and retry (for new signups)
-      await Future.delayed(const Duration(milliseconds: 500));
-      try {
-        final retryResponse = await _supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', _user!.id)
-            .single();
-        _role = retryResponse['role'] ?? 'user'; // Default to user if null
-        notifyListeners();
-      } catch (retryError) {
-        // If still no profile, default to user role
-        _role = 'user';
-        notifyListeners();
-      }
+      debugPrint('Error fetching user role: $e');
+      // Default to user role on error
+      _role = 'user';
+      notifyListeners();
     }
+  }
+
+  Future<void> _ensureProfileExists() async {
+    try {
+      // Try to get existing profile
+      await _supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', _user!.id)
+          .single();
+    } catch (e) {
+      // Profile doesn't exist, create it
+      await _supabase.from('profiles').insert({
+        'id': _user!.id,
+        'email': _user!.email,
+        'role': 'user',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<void> _updateUserRole(String newRole) async {
+    await _supabase
+        .from('profiles')
+        .update({'role': newRole, 'updated_at': DateTime.now().toIso8601String()})
+        .eq('id', _user!.id);
   }
 
   Future<void> signUp(String email, String password) async {
@@ -98,9 +170,79 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> signOut() async {
     try {
+      _clearSession();
       await _supabase.auth.signOut();
+      notifyListeners();
     } catch (e) {
       throw Exception('Failed to sign out: $e');
     }
+  }
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await _supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: null, // Will use default redirect URL configured in Supabase
+      );
+    } catch (e) {
+      throw Exception('Failed to send reset email: $e');
+    }
+  }
+
+  Future<Seller?> getSellerInfo() async {
+    if (_user == null || _role != 'seller') return null;
+    try {
+      final response = await _supabase
+          .from('sellers')
+          .select()
+          .eq('id', _user!.id)
+          .single();
+      return Seller.fromJson(response);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> refreshSession() async {
+    if (_user != null) {
+      _startSessionTimer();
+      await _fetchUserRole();
+    }
+  }
+
+  Future<void> updateProfile(Map<String, dynamic> updates) async {
+    if (_user == null) return;
+
+    try {
+      await _supabase
+          .from('profiles')
+          .update({...updates, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', _user!.id);
+
+      // Refresh role if it was updated
+      if (updates.containsKey('role')) {
+        _role = updates['role'];
+        notifyListeners();
+      }
+    } catch (e) {
+      throw Exception('Failed to update profile: $e');
+    }
+  }
+
+  Future<void> updateUserProfile(Map<String, dynamic> updates) async {
+    if (_user == null) return;
+
+    try {
+      _userProfile = await _userService.updateUserProfile(_user!.id, updates);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to update user profile: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _sessionTimer?.cancel();
+    super.dispose();
   }
 }

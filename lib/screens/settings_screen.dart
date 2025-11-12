@@ -18,6 +18,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _language = 'English';
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
@@ -121,10 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: 'Profile Information',
                       subtitle: 'Update your personal details',
                       onTap: () {
-                        // Navigate to profile edit screen
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Profile edit coming soon')),
-                        );
+                        Navigator.pushNamed(context, '/user-profile');
                       },
                     ),
                     const Divider(color: Colors.white24),

@@ -43,14 +43,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final products = await _productService.fetchProducts();
       if (mounted) {
         setState(() {
-          _products = products.map((product) => Product(
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            imageUrl: product.imageUrl.isNotEmpty ? product.imageUrl : 'https://via.placeholder.com/300x300?text=No+Image',
-            stock: product.stock,
-          )).toList();
+          _products = products;
         });
       }
     } catch (e) {
@@ -260,14 +253,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         userId: userId,
         items: items,
         totalAmount: total,
-        status: 'pending_payment',
+        status: OrderStatus.pendingPayment,
         createdAt: DateTime.now(),
       );
 
       await _orderService.createOrder(order);
 
       // Initiate payment
-      await _paymentService.initiateSTKPush(phone, total, orderId);
+      await _paymentService.initiateSTKPush(
+        phoneNumber: phone,
+        amount: total,
+        orderId: orderId,
+      );
 
       // Clear cart
       if (mounted) {
