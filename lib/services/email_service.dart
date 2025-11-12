@@ -166,6 +166,27 @@ class EmailService {
     }
   }
 
+  Future<void> sendEmailVerification({
+    required String toEmail,
+    required String userName,
+    required String verificationToken,
+  }) async {
+    try {
+      await _sendEmail(
+        to: toEmail,
+        subject: 'Verify Your Email - Esaller APK',
+        template: 'email_verification',
+        templateData: {
+          'user_name': userName,
+          'verification_url': 'https://esellerapk.com/verify-email?token=$verificationToken',
+          'verification_token': verificationToken,
+        },
+      );
+    } catch (e) {
+      throw Exception('Failed to send verification email: $e');
+    }
+  }
+
   Future<void> sendReviewNotificationEmail({
     required String toEmail,
     required String sellerName,

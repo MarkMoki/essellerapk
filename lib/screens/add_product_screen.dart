@@ -7,6 +7,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
 import '../widgets/image_upload_widget.dart';
+import '../constants.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -193,7 +194,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to add product: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
           ),
         );

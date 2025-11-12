@@ -112,8 +112,22 @@ flutter run
 ### 2. Supabase Setup
 1. Create a new Supabase project at [supabase.com](https://supabase.com)
 2. Go to SQL Editor and run the contents of `supabase_schema.sql`
-3. Get your project URL and anon key from Settings > API
-4. Update `lib/constants.dart` with your credentials:
+   - **Note**: The schema includes automatic migrations to handle updates safely
+   - It can be run multiple times without issues
+   - Existing data will be preserved during migrations
+3. **Email Verification Setup** (Important for production):
+   - Go to Authentication > Settings
+   - **Disable "Enable email confirmations"** - We handle verification manually in the app to allow admin bypass
+   - Configure SMTP settings to avoid spam:
+     - Use a reputable email service like SendGrid, Mailgun, or AWS SES
+     - Set up SMTP credentials in Authentication > Settings > SMTP Settings
+     - This ensures emails don't go to spam folders
+   - **Rate Limiting**: To remove email send rate limits (for over_email_send_rate errors):
+     - Go to Authentication > Rate Limits
+     - Increase or disable the "Email sends per hour" limit
+     - Note: This may require a paid Supabase plan for higher limits
+4. Get your project URL and anon key from Settings > API
+5. Update `lib/constants.dart` with your credentials:
    ```dart
    const String supabaseUrl = 'your-project-url';
    const String supabaseAnonKey = 'your-anon-key';
@@ -227,6 +241,24 @@ flutter test integration_test/
 - Use M-Pesa sandbox environment
 - Test STK Push flow
 - Verify callback handling
+
+## Troubleshooting
+
+### Database Issues
+- **Schema Updates**: The `supabase_schema.sql` includes automatic migrations. Re-run it in Supabase SQL Editor if you encounter table-related errors.
+- **Connection Issues**: Verify your Supabase URL and keys in `lib/constants.dart` are correct.
+- **RLS Policies**: If data isn't loading, check that Row Level Security policies are properly configured.
+- **Migration Errors**: The schema is designed to be idempotent. If migrations fail, check Supabase logs for details.
+
+### Build Issues
+- **Dependencies**: Run `flutter pub get` to ensure all packages are installed.
+- **Platform Setup**: For Android/iOS builds, ensure platform-specific configurations are complete.
+- **Environment Variables**: Double-check all API keys and URLs are properly set.
+
+### Payment Issues
+- **M-Pesa Sandbox**: Use sandbox credentials for testing, production credentials for live app.
+- **Callback URLs**: Ensure your callback URLs are correctly configured in Daraja dashboard.
+- **Network Issues**: M-Pesa APIs may have timeouts; implement retry logic in your payment service.
 
 ## Contributing
 

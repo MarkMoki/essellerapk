@@ -5,6 +5,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 
 class SellerOrdersScreen extends StatefulWidget {
   const SellerOrdersScreen({super.key});
@@ -337,7 +338,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update order: $e'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.red,
           ),
         );

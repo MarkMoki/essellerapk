@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../models/review.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
+import '../constants.dart';
 
 class ReviewsScreen extends StatefulWidget {
   const ReviewsScreen({super.key});
@@ -71,7 +72,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> with TickerProviderStateM
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load reviews: $e')),
+          SnackBar(content: Text(getUserFriendlyErrorMessage(e))),
         );
       }
     } finally {

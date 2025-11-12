@@ -4,6 +4,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 
 class AdminSellersScreen extends StatefulWidget {
   const AdminSellersScreen({super.key});
@@ -485,7 +486,7 @@ class _AdminSellersScreenState extends State<AdminSellersScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete seller: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text(getUserFriendlyErrorMessage(e)), backgroundColor: Colors.red),
           );
         }
       }

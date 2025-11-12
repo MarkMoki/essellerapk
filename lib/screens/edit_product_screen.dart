@@ -8,6 +8,7 @@ import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
 import '../widgets/professional_image.dart';
 import '../widgets/image_upload_widget.dart';
+import '../constants.dart';
 
 class EditProductScreen extends StatefulWidget {
   final Product product;
@@ -242,7 +243,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update product: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
           ),
         );

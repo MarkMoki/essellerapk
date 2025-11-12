@@ -4,6 +4,7 @@ import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
 import '../services/search_service.dart';
 import '../models/product.dart';
+import '../constants.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -135,7 +136,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Search failed: $e')),
+          SnackBar(content: Text(getUserFriendlyErrorMessage(e))),
         );
       }
     } finally {

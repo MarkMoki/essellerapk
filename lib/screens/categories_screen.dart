@@ -3,6 +3,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../services/search_service.dart';
 import '../models/product.dart';
+import '../constants.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -248,7 +249,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load products: $e')),
+          SnackBar(content: Text(getUserFriendlyErrorMessage(e))),
         );
       }
     }

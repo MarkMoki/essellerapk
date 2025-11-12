@@ -1,8 +1,29 @@
+-- Supabase Schema for Esaller E-commerce App
+-- This schema is designed to be idempotent - it can be run multiple times safely
+-- All CREATE statements use IF NOT EXISTS to prevent conflicts
+-- Migrations are included to handle schema changes without data loss
+
 -- Enable Row Level Security
 -- Note: RLS on auth.users is enabled by default in Supabase
 
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Migration: Rename wishlist table to wishlist_items if it exists
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'wishlist') THEN
+        -- Rename table
+        ALTER TABLE wishlist RENAME TO wishlist_items;
+
+        -- Rename column if needed
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'wishlist_items' AND column_name = 'created_at') THEN
+            ALTER TABLE wishlist_items RENAME COLUMN created_at TO added_at;
+        END IF;
+
+        -- Update any references in policies, indexes, etc. will be handled by the CREATE statements below
+    END IF;
+END $$;
 
 -- Profiles table
 CREATE TABLE IF NOT EXISTS profiles (

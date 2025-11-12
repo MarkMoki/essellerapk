@@ -4,6 +4,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 
 class AdminContentManagementScreen extends StatefulWidget {
   const AdminContentManagementScreen({super.key});
@@ -616,7 +617,7 @@ class _AdminContentManagementScreenState extends State<AdminContentManagementScr
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete product: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text(getUserFriendlyErrorMessage(e)), backgroundColor: Colors.red),
           );
         }
       }

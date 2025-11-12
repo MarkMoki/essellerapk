@@ -10,6 +10,7 @@ import '../services/payout_service.dart';
 import '../services/email_service.dart';
 import '../services/notification_service.dart';
 import '../models/notification.dart';
+import '../constants.dart';
 
 class SellerPayoutsScreen extends StatefulWidget {
   const SellerPayoutsScreen({super.key});
@@ -577,7 +578,7 @@ class _SellerPayoutsScreenState extends State<SellerPayoutsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to submit payout request: $e'),
+              content: Text(getUserFriendlyErrorMessage(e)),
               backgroundColor: Colors.red,
             ),
           );

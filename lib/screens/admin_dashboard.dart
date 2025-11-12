@@ -11,6 +11,7 @@ import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
 import '../widgets/professional_image.dart';
 import '../widgets/bottom_navigation.dart';
+import '../constants.dart';
 import 'add_product_screen.dart';
 import 'edit_product_screen.dart';
 import 'admin_orders_screen.dart';
@@ -85,7 +86,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load dashboard: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
             action: SnackBarAction(
               label: 'Retry',

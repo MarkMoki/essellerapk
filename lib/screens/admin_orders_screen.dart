@@ -5,6 +5,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 
 class AdminOrdersScreen extends StatefulWidget {
   const AdminOrdersScreen({super.key});
@@ -51,7 +52,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load orders: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
             action: SnackBarAction(
               label: 'Retry',
@@ -80,7 +81,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update order status: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
           ),
         );

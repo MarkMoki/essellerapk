@@ -4,6 +4,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 
 class AdminSellerRenewalsScreen extends StatefulWidget {
   const AdminSellerRenewalsScreen({super.key});
@@ -436,7 +437,7 @@ class _AdminSellerRenewalsScreenState extends State<AdminSellerRenewalsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to renew seller: $e'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.red,
           ),
         );

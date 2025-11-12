@@ -4,6 +4,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 
 class AnalyticsData {
   final int totalProducts;
@@ -114,7 +115,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load analytics: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
             action: SnackBarAction(
               label: 'Retry',

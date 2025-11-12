@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_button.dart';
+import '../constants.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -153,7 +154,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Authentication failed: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
             duration: const Duration(seconds: 5),
           ),
@@ -167,4 +168,5 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     }
   }
+
 }

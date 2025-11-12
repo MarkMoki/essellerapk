@@ -3,6 +3,7 @@ import '../services/image_upload_service.dart';
 import 'glassy_container.dart';
 import 'glassy_button.dart';
 import 'professional_image.dart';
+import '../constants.dart';
 
 class ImageUploadWidget extends StatefulWidget {
   final String? initialImageUrl;
@@ -230,7 +231,7 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to pick image: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -248,7 +249,7 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to take photo: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -283,7 +284,7 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload image: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
           ),
         );

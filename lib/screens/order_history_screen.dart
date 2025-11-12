@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
+import '../constants.dart';
 import 'order_tracking_screen.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
@@ -62,7 +63,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load orders: $e')),
+          SnackBar(content: Text(getUserFriendlyErrorMessage(e))),
         );
       }
       setState(() => _isLoading = false);

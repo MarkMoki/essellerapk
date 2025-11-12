@@ -111,6 +111,7 @@ class AuthProvider with ChangeNotifier {
       // Default to user role on error
       _role = 'user';
       notifyListeners();
+      rethrow; // Re-throw to handle verification error
     }
   }
 
@@ -145,10 +146,12 @@ class AuthProvider with ChangeNotifier {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
+        data: {'email_confirm': true}, // Auto-confirm email
       );
       if (response.user == null) {
         throw Exception('Signup failed: Unable to create account');
       }
+      // No email verification required for any role
     } catch (e) {
       throw Exception('Failed to sign up: $e');
     }
@@ -163,6 +166,7 @@ class AuthProvider with ChangeNotifier {
       if (response.user == null) {
         throw Exception('Login failed: Invalid credentials');
       }
+      // Role check will be handled in _fetchUserRole
     } catch (e) {
       throw Exception('Failed to sign in: $e');
     }
@@ -188,6 +192,7 @@ class AuthProvider with ChangeNotifier {
       throw Exception('Failed to send reset email: $e');
     }
   }
+
 
   Future<Seller?> getSellerInfo() async {
     if (_user == null || _role != 'seller') return null;

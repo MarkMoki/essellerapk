@@ -9,6 +9,7 @@ import '../widgets/glassy_button.dart';
 import '../widgets/professional_image.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 import 'add_product_screen.dart';
 import 'edit_product_screen.dart';
 
@@ -80,7 +81,7 @@ class _SellerProductsScreenState extends State<SellerProductsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to delete product: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
           ),
         );

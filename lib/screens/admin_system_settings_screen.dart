@@ -3,6 +3,7 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../constants.dart';
 
 class AdminSystemSettingsScreen extends StatefulWidget {
   const AdminSystemSettingsScreen({super.key});
@@ -77,7 +78,7 @@ class _AdminSystemSettingsScreenState extends State<AdminSystemSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save settings: $e'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.red,
           ),
         );

@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_button.dart';
+import '../constants.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -162,7 +163,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to send reset email: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(getUserFriendlyErrorMessage(e)),
             backgroundColor: Colors.redAccent,
             duration: const Duration(seconds: 5),
           ),
