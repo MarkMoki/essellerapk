@@ -13,9 +13,12 @@ import 'screens/orders_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/help_screen.dart';
 import 'screens/admin_dashboard.dart';
+import 'screens/admin_analytics_screen.dart';
+import 'screens/admin_system_settings_screen.dart';
 import 'screens/seller_dashboard_screen.dart';
 import 'screens/seller_products_screen.dart';
 import 'screens/seller_payment_methods_screen.dart';
+import 'screens/seller_inventory_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/new_return_screen.dart';
 import 'screens/user_profile_screen.dart';
@@ -56,6 +59,12 @@ class RouteGuard {
       case '/admin':
         screen = const AdminDashboard();
         break;
+      case '/admin/analytics':
+        screen = const AdminAnalyticsScreen();
+        break;
+      case '/admin/system-settings':
+        screen = const AdminSystemSettingsScreen();
+        break;
       case '/seller/dashboard':
         screen = const SellerDashboardScreen();
         break;
@@ -64,6 +73,9 @@ class RouteGuard {
         break;
       case '/seller/payment-methods':
         screen = const SellerPaymentMethodsScreen();
+        break;
+      case '/seller/inventory':
+        screen = const SellerInventoryScreen();
         break;
       case '/forgot-password':
         screen = const ForgotPasswordScreen();
@@ -108,22 +120,25 @@ class RouteGuardWidget extends StatelessWidget {
     // Define route permissions
     final routePermissions = {
       '/auth': {'requiresAuth': false, 'roles': <String>[]},
-      '/home': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/cart': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/checkout': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/orders': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/settings': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/help': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
+      '/home': {'requiresAuth': true, 'roles': ['user']},
+      '/cart': {'requiresAuth': true, 'roles': ['user']},
+      '/checkout': {'requiresAuth': true, 'roles': ['user']},
+      '/orders': {'requiresAuth': true, 'roles': ['user']},
+      '/settings': {'requiresAuth': true, 'roles': ['user']},
+      '/help': {'requiresAuth': true, 'roles': ['user']},
       '/admin': {'requiresAuth': true, 'roles': ['admin']},
+      '/admin/analytics': {'requiresAuth': true, 'roles': ['admin']},
+      '/admin/system-settings': {'requiresAuth': true, 'roles': ['admin']},
       '/seller/dashboard': {'requiresAuth': true, 'roles': ['seller']},
       '/seller/products': {'requiresAuth': true, 'roles': ['seller']},
       '/seller/payment-methods': {'requiresAuth': true, 'roles': ['seller']},
+      '/seller/inventory': {'requiresAuth': true, 'roles': ['seller']},
       '/forgot-password': {'requiresAuth': false, 'roles': <String>[]},
-      '/new-return': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/user-profile': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/user-addresses': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/add-address': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
-      '/edit-address': {'requiresAuth': true, 'roles': ['user', 'seller', 'admin']},
+      '/new-return': {'requiresAuth': true, 'roles': ['user']},
+      '/user-profile': {'requiresAuth': true, 'roles': ['user']},
+      '/user-addresses': {'requiresAuth': true, 'roles': ['user']},
+      '/add-address': {'requiresAuth': true, 'roles': ['user']},
+      '/edit-address': {'requiresAuth': true, 'roles': ['user']},
     };
 
     final currentRoute = ModalRoute.of(context)?.settings.name;
@@ -328,18 +343,38 @@ class AuthWrapper extends StatelessWidget {
       return const AuthScreen();
     }
 
-    // 👑 Admin → Admin Dashboard
-    if (authProvider.isAdmin) {
-      return const AdminDashboard();
-    }
+    // Use addPostFrameCallback to navigate after build to ensure context is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (authProvider.isAdmin) {
+        Navigator.of(context).pushReplacementNamed('/admin');
+      } else if (authProvider.isSeller) {
+        Navigator.of(context).pushReplacementNamed('/seller/dashboard');
+      } else {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    });
 
-    // 🛒 Seller → Seller Dashboard
-    if (authProvider.isSeller) {
-      return const SellerDashboardScreen();
-    }
-
-    // 🏠 Regular user → Home
-    return const HomeScreen();
+    // Return a loading screen while navigating
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1a1a2e),
+              Color(0xFF16213e),
+              Color(0xFF0f0f23),
+            ],
+          ),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      ),
+    );
   }
 }
   

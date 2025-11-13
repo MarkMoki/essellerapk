@@ -3,6 +3,9 @@ import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/retry_widget.dart';
+import '../widgets/access_denied_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class AdminUserSupportScreen extends StatefulWidget {
   const AdminUserSupportScreen({super.key});
@@ -95,6 +98,11 @@ class _AdminUserSupportScreenState extends State<AdminUserSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    if (!authProvider.isAdmin) {
+      return const AccessDeniedScreen();
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'User Support'),

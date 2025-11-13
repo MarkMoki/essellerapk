@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/access_denied_screen.dart';
 import '../models/seller.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
@@ -56,6 +57,11 @@ class _SellerSubscriptionsScreenState extends State<SellerSubscriptionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    if (!authProvider.isSeller) {
+      return const AccessDeniedScreen();
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Subscription'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/access_denied_screen.dart';
 import '../services/product_service.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
@@ -91,6 +92,11 @@ class _SellerProductsScreenState extends State<SellerProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    if (!authProvider.isSeller) {
+      return const AccessDeniedScreen();
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'My Products'),

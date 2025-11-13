@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../providers/auth_provider.dart';
 import '../widgets/glassy_app_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/loading_overlay.dart';
@@ -11,6 +9,9 @@ import '../services/email_service.dart';
 import '../services/notification_service.dart';
 import '../models/notification.dart';
 import '../constants.dart';
+import '../widgets/access_denied_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class SellerPayoutsScreen extends StatefulWidget {
   const SellerPayoutsScreen({super.key});
@@ -78,6 +79,11 @@ class _SellerPayoutsScreenState extends State<SellerPayoutsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    if (!authProvider.isSeller) {
+      return const AccessDeniedScreen();
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: const GlassyAppBar(title: 'Payouts'),
@@ -530,7 +536,8 @@ class _SellerPayoutsScreenState extends State<SellerPayoutsScreen> {
 
     if (result != null) {
       try {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        // Capture auth provider before async operations
+        final authProvider = Provider.of<AuthProvider>(context, listen: false); // ignore: use_build_context_synchronously
         final sellerId = authProvider.user!.id;
 
         await _payoutService.createPayoutRequest(

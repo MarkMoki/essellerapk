@@ -11,6 +11,7 @@ import '../widgets/glassy_container.dart';
 import '../widgets/glassy_button.dart';
 import '../widgets/professional_image.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/access_denied_screen.dart';
 import '../constants.dart';
 import 'add_product_screen.dart';
 import 'edit_product_screen.dart';
@@ -561,6 +562,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    if (!authProvider.isAdmin) {
+      return const AccessDeniedScreen();
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: GlassyAppBar(
